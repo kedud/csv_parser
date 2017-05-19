@@ -1,6 +1,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+static char separator = ',';
+
+void csv_set_separator(char sep)
+{
+  separator = sep;
+}
+
 void free_csv_line( char **parsed )
 {
     char **ptr;
@@ -33,16 +40,16 @@ static int count_fields( const char *line )
             continue;
         }
 
-        switch( *ptr )
+        if ('\"' == *ptr) {
+          fQuote = 1;
+          continue;
+        }else if (separator == *ptr)
         {
-            case '\"':
-                fQuote = 1;
-                continue;
-            case ',':
-                cnt++;
-                continue;
-            default:
-                continue;
+          cnt++;
+          continue;
+        }else
+        {
+          continue;
         }
     }
 
@@ -111,41 +118,44 @@ char **parse_csv( const char *line )
             continue;
         }
 
-        switch( *ptr )
+        if ('\"' == *ptr)
         {
-            case '\"':
-                fQuote = 1;
-                continue;
-            case '\0':
-                fEnd = 1;
-            case ',':
-                *tptr = '\0';
-                *bptr = strdup( tmp );
-
-                if ( !*bptr )
-                {
-                    for ( bptr--; bptr >= buf; bptr-- ) {
-                        free( *bptr );
-                    }
-                    free( buf );
-                    free( tmp );
-
-                    return NULL;
-                }
-
-                bptr++;
-                tptr = tmp;
-
-                if ( fEnd ) {
-                  break;
-                } else {
-                  continue;
-                }
-
-            default:
-                *tptr++ = *ptr;
-                continue;
+          fQuote = 1;
+          continue;
         }
+
+        if ((separator == *ptr) || ('\0' == *ptr))
+        {
+          if ('\0' == *ptr) {
+            fEnd = 1;
+          }
+
+          *tptr = '\0';
+          *bptr = strdup( tmp );
+
+          if ( !*bptr )
+          {
+              for ( bptr--; bptr >= buf; bptr-- ) {
+                  free( *bptr );
+              }
+              free( buf );
+              free( tmp );
+
+              return NULL;
+          }
+
+          bptr++;
+          tptr = tmp;
+
+          if ( fEnd ) {
+            break;
+          } else {
+            continue;
+          }
+        }
+
+        *tptr++ = *ptr;
+        continue;
 
         if ( fEnd ) {
             break;

@@ -2,7 +2,8 @@
 #include <string.h>
 #include "../csv.h"
 
-int test_parse_csv(void);
+int test_parse_csv_coma(void);
+int test_parse_csv_semicolon(void);
 int test_split_on_unescaped_newlines(void);
 int test_fread_csv_line(void);
 
@@ -18,26 +19,27 @@ void run_test(const char *name, int test(void)) {
 }
 
 int main(void) {
-  run_test("test_parse_csv", test_parse_csv);
+  run_test("test_parse_csv_coma", test_parse_csv_coma);
+
+  run_test("test_parse_csv_semicolon", test_parse_csv_semicolon);
 
   run_test("test_split_on_unescaped_newlines", test_split_on_unescaped_newlines);
 
   run_test("test_fread_csv_line", test_fread_csv_line);
 }
 
-int test_parse_csv(void)
+int test_parse_csv_coma(void)
 {
   /*
    * Test string adapted from https://en.wikipedia.org/wiki/Comma-separated_values
    */
-  const char *test = 
+  const char *test =
     "1996,Jeep,\"Venture \"\"Extended Edition\"\"\",\"MUST SELL!\nair, moon roof, loaded\",4799.00";
   char **parsed = parse_csv( test );
 
   if ( !parsed[0] || !parsed[1] || !parsed[2] || !parsed[3] || !parsed[4] ) {
     return 0;
   }
-
   if ( parsed[5] ) {
     return 0;
   }
@@ -46,6 +48,33 @@ int test_parse_csv(void)
   ||   strcmp(parsed[1], "Jeep")
   ||   strcmp(parsed[2], "Venture \"Extended Edition\"")
   ||   strcmp(parsed[3], "MUST SELL!\nair, moon roof, loaded")
+  ||   strcmp(parsed[4], "4799.00" ) ) {
+    return 0;
+  }
+
+  free_csv_line( parsed );
+
+  return 1;
+}
+
+int test_parse_csv_semicolon(void)
+{
+  csv_set_separator(';');
+  const char *test =
+    "1996;Jeep;\"Venture \"\"Extended Edition\"\"\";\"MUST SELL!\nair; moon roof; loaded\";4799.00";
+  char **parsed = parse_csv( test );
+
+  if ( !parsed[0] || !parsed[1] || !parsed[2] || !parsed[3] || !parsed[4] ) {
+    return 0;
+  }
+  if ( parsed[5] ) {
+    return 0;
+  }
+
+  if ( strcmp(parsed[0], "1996")
+  ||   strcmp(parsed[1], "Jeep")
+  ||   strcmp(parsed[2], "Venture \"Extended Edition\"")
+  ||   strcmp(parsed[3], "MUST SELL!\nair; moon roof; loaded")
   ||   strcmp(parsed[4], "4799.00" ) ) {
     return 0;
   }

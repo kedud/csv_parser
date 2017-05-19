@@ -4,6 +4,7 @@
 #define CSV_ERR_LONGLINE 0
 #define CSV_ERR_NO_MEMORY 1
 
+void csv_set_separator(char sep);
 char **parse_csv( const char *line );
 void free_csv_line( char **parsed );
 char **split_on_unescaped_newlines(const char *txt);
